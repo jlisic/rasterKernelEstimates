@@ -1,0 +1,7 @@
+Copyright (c) 2015-2016 Jonathan Lisic. MIT. rasterKernelEstimates R package.
+All rights reserved.
+
+Exceptions:
+
+Copyright (c) 2002 Nicholas Devillard. Public Domain. Function torben in smooth.multi.c.
+URL: http://ndevilla.free.fr/median/median/src/torben.c
