@@ -2,18 +2,28 @@
 % Please edit documentation in R/rasterSpatialKDE.R
 \name{rasterSpatialKDE}
 \alias{rasterSpatialKDE}
-\title{Calculates a local guassian kernel estimate for an in memory raster image.}
+\title{Calculates a local Gaussian kernel estimate for an in memory raster image.}
 \usage{
-rasterSpatialKDE(r, h, h.x, h.y)
+rasterSpatialKDE(r, h, h.x = ncol(r), h.y = nrow(r))
 }
 \arguments{
 \item{r}{An in memory raster image.}
 
-\item{h}{the bandwidth parameter for the raster values.}
+\item{h}{The bandwidth parameter for the raster values.}
 
-\item{h.x}{the bandwidth parameter for the raster columns.}
+\item{h.x}{An optional truncation parameter for the spatial support. This
+parameter is specified in number of horizontal pixels to be evaluated.
+The truncated neighborhood is centered around the current pixel, requiring
+this parameter to be odd.  If the parameter is not odd, it will be 
+increased in size by one. The default parameter is the minimum odd value
+of the number of columns, or the number of columns plus one.}
 
-\item{h.y}{the bandwidth parameter for the raster rows.}
+\item{h.y}{An optional truncation parameter for the Gaussian kernel. This
+parameter is specified in number of vertical pixels to be evaluated.
+The truncated neighborhood is centered around the current pixel, requiring
+this parameter to be odd. If the parameter is not odd it will be 
+increased in size by one.  The default parameter is the minimum odd value
+of number or rows, or the number of rows plus one.}
 }
 \value{
 A raster image of the kernel density estimate.
