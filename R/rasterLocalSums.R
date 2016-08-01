@@ -1,35 +1,31 @@
-#' Local quantiles for an in memory raster image
+#' Local sums for an in memory raster image.
 #' 
-#' \code{rasterLocalQuantiles} finds the quantile within the positive valued neighborhood 
-#' of \code{W}.
+#' \code{rasterLocalSums} finds the local sum within the weighted neighborhood of W.
 #'
 #' @param r An in memory raster image.
-#' @param W A matrix of weights.  The quantile kernel will be applied to each 
-#'   pixel in \code{r}.  Dimensions must be non-zero and odd.  
-#' @param q An integer between 0 and 100, specifying a quantile.
+#' @param W A matrix of weights.  The sums will be applied at each centroid. 
+#'   Dimensions must be non-zero and odd.  Only non-missing neighbors are used in 
+#'   the sum.
 #' @details A spatial neighborhood is calculated for each pixel in \code{r}.
 #'   The spatial neighborhood for each pixel is defined by the weight matrix
 #'   \code{W}, where the center of the odd dimensioned matrix \code{W} is identified 
-#'   with the target pixel.  The target pixel value is replaced with the most
-#'   quantile of the neighborhood weighted by \code{W}.  Only non-missing or neighbors
-#'   with non-zero weights are used in the calculation.
-#' @return An in memory raster image of local quantiles.
+#'   with the target pixel.  The target pixel value is replaced with the sum of
+#'   all pixels within the neighborhood weighted by \code{W}.   Only non-missing 
+#'   or neighbors with non-zero weights are used in the calculation.
+#' @return An in memory raster image of local sums.
 #' @examples 
 #' r <- raster::raster( matrix(rnorm(36),6,6)) 
 #' W <- matrix(1,3,3)
-#' medianR <- rasterLocalQuantiles(r,W)
+#' sumR <- rasterLocalSums(r,W)
 #' @importFrom raster raster
 #' @importFrom raster values
 #' @useDynLib rasterKernelEstimates
 #' @export
-rasterLocalQuantiles <-
+rasterLocalSums <-
 function(
   r,
-  W,
-  q=50
+  W
   ) {
-
-  if( q < 0 | q > 100 )  stop("Invalid quantile value q.")
   
   r.values <- raster::values(r)
 
@@ -38,18 +34,19 @@ function(
 
   r.values[r.values.na]  <- Inf 
 
-  r.result <- .C("rSmoothLocalQuantile",
+
+  r.result <- .C("rSmoothSums",
     as.double(r.values),
     as.double(r.values),
-    as.double(c(t(W))),
-    as.double(q/100),
+    as.double(c(t(W))), 
     as.integer(nrow(r)),
     as.integer(ncol(r)),
     as.integer(nrow(W)),
     as.integer(ncol(W)),
-    NAOK=TRUE,
     PACKAGE='rasterKernelEstimates'
   )
+
+  r.result <<- r.result
 
   r.mu <- r
 

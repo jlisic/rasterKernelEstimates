@@ -2,23 +2,33 @@
 % Please edit documentation in R/rasterLocalCategoricalModes.R
 \name{rasterLocalCategoricalModes}
 \alias{rasterLocalCategoricalModes}
-\title{Local categorical modes for an in memory raster image.}
+\title{Local categorical modes for an in memory raster image}
 \usage{
 rasterLocalCategoricalModes(r, W)
 }
 \arguments{
 \item{r}{An in memory raster image. Pixels should be whole numbers or \code{NA}. 
-Pixels with non whole number values will be coerced to whole numbers.}
+Pixels with non-whole number values will be coerced into whole numbers.}
 
-\item{W}{A matrix of weights.  The modal kernel will be applied at each 
-centroid.  Dimensions must be non-zero and odd.}
+\item{W}{A matrix of weights.  The modal kernel will be applied to each 
+pixel in \code{r}.  Dimensions must be non-zero and odd.}
 }
 \value{
 An in memory raster image by most popular categories.
 }
 \description{
 \code{rasterLocalCategoricalModes} finds the most popular category within the 
-weighted neighborhood of W.
+weighted neighborhood of \code{W}.
+}
+\details{
+A spatial neighborhood is calculated for each pixel in \code{r}.
+  The spatial neighborhood for each pixel is defined by the weight matrix
+  \code{W}, where the center of the odd dimensioned matrix \code{W} is identified 
+  with the target pixel.  The target pixel value is replaced with the most
+  popular value within the neighborhood weighted by \code{W}.  Ties are
+  handled by randomly by uniformly selecting a category amongst the tied
+  categories.  Only non-missing or neighbors with non-zero weights are used 
+  in the calculation.
 }
 \examples{
 r <- raster::raster( matrix(runif(81),9,9)) 

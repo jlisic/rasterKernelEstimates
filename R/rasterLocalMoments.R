@@ -1,11 +1,11 @@
-#' Local moments for an in memory raster image.
+#' Local moments for an in memory raster image
 #' 
 #' \code{rasterLocalMoments} finds the local moments within the weighted neighborhood 
 #' of W.
 #'
 #' @param r An in memory raster image.
-#' @param WMu A matrix of weights.  The mean kernel will be applied at each 
-#'   centroid.  Dimensions must be non-zero and odd.  Only non-missing 
+#' @param WMu A matrix of weights.  The mean kernel will be applied to each 
+#'   pixel in \code{r}.  Dimensions must be non-zero and odd.  Only non-missing 
 #'   neighbors are used in the mean.  
 #' @param WVar A matrix of weights.  The variance kernel will be applied at each 
 #'   centroid.  Dimensions must be non-zero and odd.  Only non-missing 

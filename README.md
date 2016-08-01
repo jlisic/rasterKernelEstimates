@@ -1,25 +1,22 @@
 # rasterKernelEstimates
-Kernel Based Estimates on In-Memory Raster Images
+Kernel Based Estimates on in-Memory Raster Images
 
 Package: rasterKernelEstimates
 
 Type: Package
 
-Title: Kernel Based Estimates on In-Memory Raster Images
+Title: Kernel Based Estimates on in-Memory Raster Images
 
 Version: 1.0
 
 Date: 2016-03-08
 
-Authors and Creator:
+Author and Creator:
     Jonathan Lisic, jlisic@gmail.com 
-
-Code for Median Calculation:
-    Nicolas Devillard
 
 Imports: raster
 
-Maintainer: Jonathan Lisic <jlisic@gmail.com>
+Maintainer: Jonathan Lisic <jlisic at gmail.com>
 
 Description: Performs kernel based estimates on in-memory raster images
   from the raster package.  These kernel estimates include local means

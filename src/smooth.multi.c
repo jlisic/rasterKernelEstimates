@@ -1,70 +1,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-
-/* macro to disable openmp*/
-#ifndef NOMP
-#include "Rinternals.h"
-#define CSTACK_DEFNS 7
-#include "Rinterface.h"
-#include <omp.h>
-#endif
-
-#ifdef CLI 
-#define MATHLIB_STANDALONE
-#endif
-
 #include <R.h>
 #include <Rmath.h>
-#include <assert.h>
+#include <Rinternals.h>
+#include "median.h"
 
 
-/* begin public domain code */
-
-/* 
- * The following code is publi domain.
- * Algorithm by Torben Mogensen, implementation by Nicolas Devillard.
- * This code in public domain.
- */
-
-typedef double elem_type ;
-
-elem_type torben(elem_type m[], int n)
-{
-    int         i, less, greater, equal;
-    elem_type  min, max, guess, maxltguess, mingtguess;
-
-    min = max = m[0] ;
-    for (i=1 ; i<n ; i++) {
-        if (m[i]<min) min=m[i];
-        if (m[i]>max) max=m[i];
-    }
-
-    while (1) {
-        guess = (min+max)/2;
-        less = 0; greater = 0; equal = 0;
-        maxltguess = min ;
-        mingtguess = max ;
-        for (i=0; i<n; i++) {
-            if (m[i]<guess) {
-                less++;
-                if (m[i]>maxltguess) maxltguess = m[i] ;
-            } else if (m[i]>guess) {
-                greater++;
-                if (m[i]<mingtguess) mingtguess = m[i] ;
-            } else equal++;
-        }
-        if (less <= (n+1)/2 && greater <= (n+1)/2) break ; 
-        else if (less>greater) max = maxltguess ;
-        else min = mingtguess;
-    }
-    if (less >= (n+1)/2) return maxltguess;
-    else if (less+equal >= (n+1)/2) return guess;
-    else return mingtguess;
-}
+#if defined _OPENMP
+    #include <omp.h>
+#endif
 
 
-/* end public domain code */
 
 
 
@@ -82,7 +29,7 @@ int intMin ( int x, int y) {
 
 
 
-/* generic kernel */
+/* modal kernel */
 double modalKernel(
     int * x,    /* raster image */
     double * W,    /* pre computed spatial weights */
@@ -155,11 +102,9 @@ double modalKernel(
         ) {
         
         if( x[k*nCol + l] == NAN ) continue;
-      //Rprintf("x[%d] =%d",(int) k*nCol+l, x[k*nCol + l] ); 
       if( x[k*nCol + l] >= 0 ) {  /* only run over non-negative values */
         
         for(m=0; m < M; m++) {
-         //Rprintf(" -> %d",(int) m); 
           /* increment found values */
           if( maxArray[m] == x[k*nCol + l]  ) { 
             maxArrayValue[m] += W[ k_local*dCol + l_local];
@@ -168,22 +113,14 @@ double modalKernel(
         }
         /* if the value is not found add it */
         if( m == M) {
-          //Rprintf(" ->> %d",(int) m); 
           maxArray[m] = x[k*nCol + l ];
           maxArrayValue[m] = W[ k_local*dCol + l_local];
           M++;
         }
       }
-      //Rprintf("m = %d\n",(int) m); 
-
     }
   }
       
-  //Rprintf("  M = %d, m = %d\n",(int) M, (int) m); 
-
-  // why would this occur?
-  //if( M > nRow * nCol) M = nRow * nCol;
- 
   /* handle the all NA case */ 
   if( M == 0 ) {
     free(maxArray);
@@ -191,8 +128,6 @@ double modalKernel(
     return( -1 ) ;
   }
   
-  //for(m=0; m < M ; m++) Rprintf(" %d := %f ",maxArray[m], maxArrayValue[m]); 
- 
   /* determine max value */ 
   for(m=0; m < M ; m++) { 
     if( maxArrayValue[m] > maxValue ) {
@@ -217,10 +152,11 @@ double modalKernel(
 
 
 
-/* generic kernel */
-double medianKernel(
+/* quantile kernel */
+double quantileKernel(
     double * x,    /* naip image */
     double * W,    /* pre computed spatial weights */
+    double quantile,      /* quantile */
     size_t i,      /* current location in columns */
     size_t j,      /* current location in rows */
     size_t dRow,
@@ -231,6 +167,7 @@ double medianKernel(
 
   /* adjustment that must be applied for edge effects */
   size_t k, l;
+  size_t quantile_t; /* size_t quantile */
 
   size_t k_start;
   size_t k_stop;
@@ -239,6 +176,9 @@ double medianKernel(
 
 
   double * medianArray = (double *) calloc( dRow * dCol, sizeof(double) );
+  double ** medianArrayPtr = (double **) calloc( dRow * dCol, sizeof(double *) );
+  for(k=0; k <dRow*dCol;k++) medianArrayPtr[k] = &medianArray[k];
+  
   double mu;
   int m = 0;
   size_t k_local;
@@ -295,13 +235,17 @@ double medianKernel(
   }
 
   if ( m > 0) {
-    mu = torben( medianArray, m ) ;
+    //mu = torben( medianArray, m ) ;
+    quantile_t = (size_t) ( (double) m * quantile ); 
+    Rprintf("quantile_t = %d, m = %d\n", (int) quantile_t, (int) m);
+    mu = quantile_quickSelectIndex( medianArrayPtr, quantile_t, m );
   } else {
     mu = NAN;
   }
   
 
   free(medianArray);
+  free(medianArrayPtr);
   return( mu ) ;
 }
 
@@ -585,8 +529,6 @@ void rSmoothLocalMoments(
 
   size_t i,j;
   
-  /* R openmp fix */
-  R_CStackLimit=(uintptr_t)-1;
 
 #pragma omp parallel
 
@@ -634,12 +576,6 @@ void rSmoothCategorical(
 
   size_t i,j;
   
-  /* R openmp fix */
-  R_CStackLimit=(uintptr_t)-1;
-
-
-// disable multiple threads
-//omp_set_num_threads(1);
 
 #pragma omp parallel
 #pragma omp parallel for private(j)
@@ -681,11 +617,6 @@ void rSpatialKDE(
 
   double hInv = 1/(*h);
 
-  /* R openmp fix */
-  R_CStackLimit=(uintptr_t)-1;
-
-// disable multiple threads
-//omp_set_num_threads(1);
 
 #pragma omp parallel
 #pragma omp parallel for private(j)
@@ -703,10 +634,11 @@ void rSpatialKDE(
 
 
 
-void rSmoothLocalMedian( 
+void rSmoothLocalQuantile( 
     double * x,         /* this is the multi year naip images  */ 
     double * mu,        /* this is the input/returned mu */ 
     double * WMu,      /* weight */
+    double * quantile, /* quantile */
     int * nRowPtr, 
     int * nColPtr,
     int * dRowPtr, 
@@ -723,15 +655,13 @@ void rSmoothLocalMedian(
 
   size_t i,j;
   
-  /* R openmp fix */
-  R_CStackLimit=(uintptr_t)-1;
 
 #pragma omp parallel
 
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {
     for( j=0; j < nCol; j++) {
-      mu[i*nCol + j] = medianKernel( x, WMu, i,j,dRow,dCol,nRow,nCol); 
+      mu[i*nCol + j] = quantileKernel( x, WMu, *quantile, i,j,dRow,dCol,nRow,nCol); 
     }
   }
 #pragma omp barrier

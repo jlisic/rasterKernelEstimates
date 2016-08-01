@@ -2,7 +2,7 @@
 % Please edit documentation in R/rasterSpatialKDE.R
 \name{rasterSpatialKDE}
 \alias{rasterSpatialKDE}
-\title{Calculates a local Gaussian kernel estimate for an in memory raster image.}
+\title{Calculates a local Gaussian kernel estimate for an in memory raster image}
 \usage{
 rasterSpatialKDE(r, h, h.x = ncol(r), h.y = nrow(r))
 }

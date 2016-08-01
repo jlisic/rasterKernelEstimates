@@ -1,4 +1,4 @@
-#' Calculates a local Gaussian kernel estimate for an in memory raster image.
+#' Calculates a local Gaussian kernel estimate for an in memory raster image
 #' 
 #' \code{rasterLocalMoments} calculates a kernel density estimate truncated by 
 #' the weighted neighborhood of W.
