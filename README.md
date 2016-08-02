@@ -1,4 +1,4 @@
-# rasterKernelEstimates
+# rasterKernelEstimates  [![Build Status](https://travis-ci.org/jlisic/rasterKernelEstimates.svg?branch=master)](https://travis-ci.org/jlisic/rasterKernelEstimates)
 Kernel Based Estimates on in-Memory Raster Images
 
 Package: rasterKernelEstimates
