@@ -41,7 +41,7 @@ function(
   if( min.offset > 0 ) {
     r.values[r.values.na]  <- -1 
   } else {
-    r.values <- r.values + min.offset
+    r.values <- r.values - min.offset
     r.values[r.values.na]  <- -1 
   }
 
@@ -62,7 +62,7 @@ function(
   # retain NA
   r.result[r.values.na] <- NA
   
-  if( min.offset <= 0 ) r.result <- r.result + min.offset
+  if( min.offset < 0 ) r.result <- r.result + min.offset
   
   raster::values(r) <- r.result 
 

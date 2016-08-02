@@ -8,10 +8,10 @@
 
 
 #if defined _OPENMP
-    #include <omp.h>
+  #include <omp.h>
+  #define CSTACK_DEFNS 7
+  #include "Rinterface.h"
 #endif
-
-
 
 
 double sumKernel(
@@ -110,8 +110,11 @@ void rSmoothSums(
   size_t nCol = *nColPtr;
 
   size_t i,j;
-  
-#pragma omp parallel
+  int tid;
+
+#if defined _OPENMP
+    R_CStackLimit=(uintptr_t)-1;
+#endif
 
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {

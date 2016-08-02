@@ -46,8 +46,6 @@ function(
     PACKAGE='rasterKernelEstimates'
   )
 
-  r.result <<- r.result
-
   r.mu <- r
 
   r.result[[2]][r.values.na] <- NA

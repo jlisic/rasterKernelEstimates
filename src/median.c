@@ -54,6 +54,25 @@ void partitionIndex(double ** A, size_t * x1, size_t  * x2, const size_t n, cons
 }
 
 
+// find the maximum value 
+double maxDoublePtr( double ** A, const size_t n) {
+  double p = - INFINITY;
+  size_t i;
+  for( i=0; i < n; i++ )
+    if( *A[i] > p ) p = *A[i];  
+  
+  return p;
+}
+
+// find the minimum value 
+double minDoublePtr( double ** A, const size_t n) {
+  double p = INFINITY;
+  size_t i;
+  for( i=0; i < n; i++ )
+    if( *A[i] < p ) p = *A[i];  
+    
+    return p;
+}
 
 
 //Quickselect Index
@@ -62,6 +81,9 @@ double quantile_quickSelectIndex( double ** A, const size_t k, const size_t n ) 
   double p;
   size_t a1, a2;
 
+  if(k == n) return(maxDoublePtr(A,n));
+  else if(k == 0) return(minDoublePtr(A,n));
+  
   //1. find pivot element p (median)
 //  p = (*A[0] + *A[n-1] + *A[n/2])/3.0;
   p = *A[n/2];

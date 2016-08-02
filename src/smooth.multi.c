@@ -8,9 +8,10 @@
 
 
 #if defined _OPENMP
-    #include <omp.h>
+  #include <omp.h>
+  #define CSTACK_DEFNS 7
+  #include "Rinterface.h"
 #endif
-
 
 
 
@@ -235,9 +236,8 @@ double quantileKernel(
   }
 
   if ( m > 0) {
-    //mu = torben( medianArray, m ) ;
     quantile_t = (size_t) ( (double) m * quantile ); 
-    Rprintf("quantile_t = %d, m = %d\n", (int) quantile_t, (int) m);
+    //Rprintf("m=%d quantile=%f quantile_t=%d\n", (int) m, quantile, (int) quantile_t );
     mu = quantile_quickSelectIndex( medianArrayPtr, quantile_t, m );
   } else {
     mu = NAN;
@@ -411,7 +411,7 @@ double gaussianKernel(
 
 
 
-/* generic kernel */
+/* variance kernel */
 double varKernel(
     double * x,    /* naip image */
     double * mu,  /*  */
@@ -530,7 +530,10 @@ void rSmoothLocalMoments(
   size_t i,j;
   
 
-#pragma omp parallel
+#if defined _OPENMP
+  R_CStackLimit=(uintptr_t)-1;
+#endif
+
 
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {
@@ -575,9 +578,11 @@ void rSmoothCategorical(
   size_t nCol = *nColPtr;
 
   size_t i,j;
-  
 
-#pragma omp parallel
+#if defined _OPENMP
+  R_CStackLimit=(uintptr_t)-1;
+#endif
+  
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {
     for( j=0; j < nCol; j++) {
@@ -592,45 +597,6 @@ void rSmoothCategorical(
 
   return;
 }
-
-
-
-void rSpatialKDE( 
-    double * x,         /* this is the multi year naip images  */ 
-    double * mu,        /* this is the input/returned mu */ 
-    double * h, 
-    int * nRowPtr, 
-    int * nColPtr,
-    int * dRowPtr, 
-    int * dColPtr
-    ) {
- 
-  /* move R ints to size_t */
-
-  size_t dRow = *dRowPtr;
-  size_t dCol = *dColPtr;
-  
-  size_t nRow = *nRowPtr;
-  size_t nCol = *nColPtr;
-
-  size_t i,j;
-
-  double hInv = 1/(*h);
-
-
-#pragma omp parallel
-#pragma omp parallel for private(j)
-  for( i=0; i < nRow; i++) {
-    for( j=0; j < nCol; j++) {
-        mu[i*nCol + j] = gaussianKernel( x,hInv,i,j,dRow,dCol,nRow,nCol); 
-    }
-  }
-#pragma omp barrier
-
-
-  return;
-}
-
 
 
 
@@ -655,8 +621,10 @@ void rSmoothLocalQuantile(
 
   size_t i,j;
   
+#if defined _OPENMP
+  R_CStackLimit=(uintptr_t)-1;
+#endif
 
-#pragma omp parallel
 
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {

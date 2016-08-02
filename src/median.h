@@ -9,6 +9,9 @@
 
 void partitionIndex(double ** A, size_t * x1, size_t  * x2, const size_t n, const double p); 
 
-
 double quantile_quickSelectIndex( double ** A, const size_t k, const size_t n ); 
+
+double minDoublePtr( double ** A, const size_t n);
+  
+double maxDoublePtr( double ** A, const size_t n);
 

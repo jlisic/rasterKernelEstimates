@@ -4,15 +4,18 @@
 #' of \code{W}.
 #'
 #' @param r An in memory raster image.
-#' @param W A matrix of weights.  The quantile kernel will be applied to each 
-#'   pixel in \code{r}.  Dimensions must be non-zero and odd.  
-#' @param q An integer between 0 and 100, specifying a quantile.
+#' @param W A matrix of weights used to specify a local neighborhood.  The quantile 
+#'   kernel will be applied to each pixel in \code{r}.  Dimensions must be non-zero 
+#'  and odd.  
+#' @param q A quantile.  This value is required to be in the inclusive interval from 
+#'   0 to 100.
 #' @details A spatial neighborhood is calculated for each pixel in \code{r}.
 #'   The spatial neighborhood for each pixel is defined by the weight matrix
 #'   \code{W}, where the center of the odd dimensioned matrix \code{W} is identified 
-#'   with the target pixel.  The target pixel value is replaced with the most
-#'   quantile of the neighborhood weighted by \code{W}.  Only non-missing or neighbors
-#'   with non-zero weights are used in the calculation.
+#'   with the target pixel.  The target pixel value is replaced with the
+#'   quantile of the neighborhood identified by \code{W}.  Only non-missing or neighbors
+#'   with non-zero weights are used in the calculation.  Quantile calculation uses
+#'   the inverse empirical CDF transform, equivalent to \code{stats::quantile} type=1.
 #' @return An in memory raster image of local quantiles.
 #' @examples 
 #' r <- raster::raster( matrix(rnorm(36),6,6)) 
