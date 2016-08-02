@@ -18,11 +18,10 @@ Imports: raster
 
 Maintainer: Jonathan Lisic <jlisic at gmail.com>
 
-Description: Performs kernel based estimates on in-memory raster images
+Description: Performs kernel based estimates on in-memory raster images 
   from the raster package.  These kernel estimates include local means
-  variances, modes, medians, and Gaussian kernel density estimates.  All
-  results are in the form of raster images, preserving original resolution
-  and projection attributes in the raster image.
+  variances, modes, and quantiles.  All results are in the form of 
+  raster images, preserving original resolution and projection attributes.
 
 Depends: R (>= 3.1.0)
 
