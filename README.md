@@ -1,4 +1,7 @@
-# rasterKernelEstimates  [![Build Status](https://travis-ci.org/jlisic/rasterKernelEstimates.svg?branch=master)](https://travis-ci.org/jlisic/rasterKernelEstimates)
+# rasterKernelEstimates  
+[![Build Status](https://travis-ci.org/jlisic/rasterKernelEstimates.svg?branch=master)](https://travis-ci.org/jlisic/rasterKernelEstimates)
+[![](http://www.r-pkg.org/badges/version/rasterKernelEstimates)](http://www.r-pkg.org/pkg/rasterKernelEstimates)
+[![CRAN RStudio mirror downloads](http://cranlogs.r-pkg.org/badges/rasterKernelEstimates)](http://www.r-pkg.org/pkg/rasterKernelEstimates)
 Kernel Based Estimates on in-Memory Raster Images
 
 Package: rasterKernelEstimates
@@ -7,7 +10,7 @@ Type: Package
 
 Title: Kernel Based Estimates on in-Memory Raster Images
 
-Version: 1.0
+Version: 1.0.1
 
 Date: 2016-03-08
 
