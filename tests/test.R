@@ -19,7 +19,7 @@ r <- raster::raster( matrix(rnorm(n^2),n,n))
 print( format(object.size(r), units = "auto")) 
 
 # create a weight matrix
-W <-  raster::raster(matrix(1/m^2,m,m )
+W <-  matrix(1/m^2,m,m )
 
 # apply the weight with rasterKernelEstimates
 run.time <- proc.time()
