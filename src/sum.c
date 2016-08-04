@@ -9,8 +9,6 @@
 
 #if defined _OPENMP
   #include <omp.h>
-  #define CSTACK_DEFNS 7
-  #include "Rinterface.h"
 #endif
 
 
@@ -111,10 +109,6 @@ void rSmoothSums(
 
   size_t i,j;
   int tid;
-
-#if defined _OPENMP
-    R_CStackLimit=(uintptr_t)-1;
-#endif
 
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {

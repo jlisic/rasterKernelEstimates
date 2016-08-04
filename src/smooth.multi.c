@@ -4,17 +4,91 @@
 #include <R.h>
 #include <Rmath.h>
 #include <Rinternals.h>
-#include "median.h"
-
 
 #if defined _OPENMP
   #include <omp.h>
-  #define CSTACK_DEFNS 7
-  #include "Rinterface.h"
 #endif
 
+// find the maximum value
+static inline double maxDouble( double * A, const size_t n) {
+  double p = - INFINITY;
+  size_t i;
+  for( i=0; i < n; i++ ) if( A[i] > p ) p = A[i];  
+  return p;
+}
+
+// find the minimum value 
+static inline double minDouble( double * A, const size_t n) {
+  double p = INFINITY;
+  size_t i;
+  for( i=0; i < n; i++ ) if( A[i] < p ) p = A[i];  
+  return p;
+}
 
 
+/* swap function */
+static inline void swap( double * A, const size_t b, const size_t c) {
+  double d = A[b];
+  A[b] = A[c];
+  A[c] = d;
+  return;
+}
+
+/* partition function */
+static inline size_t partition( double * A, const size_t left, const size_t right, const size_t pivot) {
+  
+  size_t i,tmp;
+  double p = A[pivot]; 
+
+  swap(A,pivot,right); // swap value to end
+
+  tmp = left;      // set the tmp value to the begining
+  for( i = left;i < right; i++) 
+    if( A[i] < p ) {  
+      swap(A,tmp,i); // if A[i] < p then move the result to tmp
+      tmp++; // then increment tmp by one
+    }
+
+  swap(A, right, tmp); // swap back the pivot
+
+  return tmp;
+}
+
+
+
+
+//Quickselect
+// right should be equal to n-1 and left should be 0 when searching all of A
+static inline double quantile_quickSelect( double * A, size_t left, size_t right, const size_t k)  {
+
+  size_t i;
+  size_t pivot;
+  size_t n = right+1;
+  
+  while(1) {
+
+
+    // 0. check for singleton
+    if (left==right) return( A[left] ); 
+  
+    // 1. find initial pivot element 
+    pivot = (left+right)/2;
+    
+    // 2. Partition A by A[pivot]; 
+    pivot = partition( A, left, right, pivot); 
+
+    if( k == pivot ) {
+      return( A[k] ); 
+    } else if( k < pivot ) {
+      right = pivot -1; 
+    } else  {
+      left = pivot +1;
+    }
+  }
+
+  // anything at this point is unreachable
+  return(NAN);
+}
 
 
 /* integer max */
@@ -174,11 +248,10 @@ double quantileKernel(
   size_t k_stop;
   size_t l_start;
   size_t l_stop;
+  double tmp;
 
-
-  double * medianArray = (double *) calloc( dRow * dCol, sizeof(double) );
-  double ** medianArrayPtr = (double **) calloc( dRow * dCol, sizeof(double *) );
-  for(k=0; k <dRow*dCol;k++) medianArrayPtr[k] = &medianArray[k];
+  // create a copy of the data, it will be mutated by the quantile call
+  double * tmpArray = (double *) calloc( dRow * dCol, sizeof(double) );
   
   double mu;
   int m = 0;
@@ -227,7 +300,7 @@ double quantileKernel(
        
         // only consider elements with positive valued weights 
         if( W[ k_local*dCol + l_local] > 0 ) {
-          medianArray[m] = x[k*nCol + l];
+          tmpArray[m] = x[k*nCol + l];
           m++;
         }
     
@@ -236,16 +309,39 @@ double quantileKernel(
   }
 
   if ( m > 0) {
-    quantile_t = (size_t) ( (double) m * quantile ); 
-    //Rprintf("m=%d quantile=%f quantile_t=%d\n", (int) m, quantile, (int) quantile_t );
-    mu = quantile_quickSelectIndex( medianArrayPtr, quantile_t, m );
+    /* get the index corresponding to the quantile */
+
+    /* first take care of edge cases */
+    if( quantile == 0.0 ) {
+      mu = minDouble( tmpArray, m); 
+    } else if (quantile == 1.0)  {
+      mu = maxDouble( tmpArray, m); 
+    } else {
+
+      /* per Type 1 definition */
+      tmp = ((double) m) * quantile; 
+      if( fabs( tmp - floor( tmp ) ) == 0.0 ) { // does R use machine epsilon?
+        //printf("g=0");
+        quantile_t = ((size_t) tmp) -1;
+      } else {
+       // printf("g=1");
+        quantile_t = ((size_t) tmp) ; 
+      }  
+
+      //Rprintf("m=%d quantile=%f quantile_t=%d\n", (int) m, quantile, (int) quantile_t );
+      //for(int ii=0; ii < m; ii++) Rprintf("%f,\n",tmpArray[ii]);
+
+      mu = quantile_quickSelect( tmpArray, 0, m-1, quantile_t);
+
+      //Rprintf("mu = %f\n", mu);
+    }
+
   } else {
     mu = NAN;
   }
   
 
-  free(medianArray);
-  free(medianArrayPtr);
+  free(tmpArray);
   return( mu ) ;
 }
 
@@ -506,6 +602,8 @@ double varKernel(
 }
 
 
+
+
 void rSmoothLocalMoments( 
     double * x,         /* this is the multi year naip images  */ 
     double * mu,        /* this is the input/returned mu */ 
@@ -529,11 +627,6 @@ void rSmoothLocalMoments(
 
   size_t i,j;
   
-
-#if defined _OPENMP
-  R_CStackLimit=(uintptr_t)-1;
-#endif
-
 
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {
@@ -579,10 +672,7 @@ void rSmoothCategorical(
 
   size_t i,j;
 
-#if defined _OPENMP
-  R_CStackLimit=(uintptr_t)-1;
-#endif
-  
+
 #pragma omp parallel for private(j)
   for( i=0; i < nRow; i++) {
     for( j=0; j < nCol; j++) {
@@ -620,10 +710,6 @@ void rSmoothLocalQuantile(
   size_t nCol = *nColPtr;
 
   size_t i,j;
-  
-#if defined _OPENMP
-  R_CStackLimit=(uintptr_t)-1;
-#endif
 
 
 #pragma omp parallel for private(j)
